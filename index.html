@@ -25,6 +25,14 @@ button,input,select{font:inherit}.password-wrap{display:flex;gap:8px;align-items
 .footer{text-align:center;color:#8490a3;font-size:12px;padding:15px}.contact-card{margin:18px auto 0;padding:16px 18px;max-width:760px;background:#fff;border:1px solid #dce5f0;border-radius:14px;color:var(--text);box-shadow:0 5px 18px #12345a0d}.contact-card h3{margin:0 0 10px;color:var(--navy);font-size:16px}.contact-list{display:flex;flex-wrap:wrap;gap:9px 18px}.contact-list a{color:var(--blue);font-weight:700;text-decoration:none}.contact-list a:hover{text-decoration:underline}.contact-note{font-size:12px;color:var(--muted);margin-top:9px}.app-contact{margin:22px 0 8px;padding:15px 18px;background:#fff;border:1px solid #dce5f0;border-radius:12px}.app-contact h3{margin:0 0 9px;color:var(--navy);font-size:15px}.app-contact .contact-list{font-size:14px}.qr-card{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.qr-card img{width:220px;height:220px;object-fit:contain;background:white;border:1px solid #e5eaf2;padding:8px}.qr-modal{position:fixed;inset:0;background:#10243b99;z-index:1000;display:grid;place-items:center;padding:18px}.qr-modal-box{background:white;border-radius:16px;padding:22px;width:min(520px,100%);max-height:90vh;overflow:auto}.qr-modal-box h2{margin-top:0;color:var(--navy)}
 @media(max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar{width:205px}.main{margin-left:205px;padding:18px}}
 @media(max-width:700px){.sidebar{position:static;width:100%;padding:12px}.brand{padding-bottom:12px}.sidebar nav{display:flex;overflow:auto;gap:4px}.nav-label{display:none}.nav-btn{white-space:nowrap;width:auto;margin:8px 0;padding:10px}.main{margin:0;padding:14px}.topbar{align-items:flex-start;flex-direction:column}.cards{gap:9px}.stat{padding:13px}.stat .num{font-size:25px}.form-grid{grid-template-columns:1fr}.login-card{padding:23px}}
+
+.assistant-chat{display:flex;flex-direction:column;gap:10px;min-height:180px;max-height:420px;overflow:auto;padding:14px;background:#f5f8fc;border:1px solid #e1e8f1;border-radius:12px}
+.assistant-message{max-width:88%;padding:11px 13px;border-radius:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.assistant-message.bot{align-self:flex-start;background:#fff;border:1px solid #dce5f0}
+.assistant-message.user{align-self:flex-end;background:#e2efff;border:1px solid #c6ddf7}
+.assistant-ask{display:flex;gap:8px;margin-top:12px}.assistant-ask input{flex:1;min-width:0}
+#assistantKnowledgeForm textarea{width:100%;font:inherit;padding:11px;border:1px solid #d7dfeb;border-radius:9px;resize:vertical}
+@media(max-width:600px){.assistant-ask{flex-direction:column}.assistant-message{max-width:96%}}
 </style>
 
 <link rel="manifest" href="./manifest.json">
@@ -94,6 +102,7 @@ button,input,select{font:inherit}.password-wrap{display:flex;gap:8px;align-items
       <button class="nav-btn" data-page="settings">⚙️ Thông tin xứ đoàn</button>
       <button class="nav-btn" data-page="parishes">⛪ giáo xứ</button>
       <button class="nav-btn hidden" data-page="accounts" id="accountsNav">🔐 Quản lý tài khoản</button>
+      <button class="nav-btn" data-page="assistant">🤖 Trợ lý hỏi đáp</button>
     </nav>
     <div class="nav-label">Tài khoản</div>
     <button class="nav-btn" id="logoutBtn">↪ Đăng xuất</button>
@@ -238,6 +247,34 @@ button,input,select{font:inherit}.password-wrap{display:flex;gap:8px;align-items
       </section>
     </div>
 
+    <div id="page-assistant" class="page hidden">
+      <section class="panel">
+        <div class="panel-head"><div><h2>🤖 Trợ lý hỏi đáp Eucharistia</h2><div class="muted">Đặt câu hỏi về sinh hoạt Thiếu Nhi Thánh Thể. Trợ lý trả lời dựa trên nội dung do Admin biên soạn.</div></div></div>
+        <div id="assistantChat" class="assistant-chat" aria-live="polite">
+          <div class="assistant-message bot"><b>Eucharistia:</b> Xin chào! Bạn cần tìm hiểu thông tin gì? Hãy nhập câu hỏi bên dưới nhé.</div>
+        </div>
+        <form id="assistantAskForm" class="assistant-ask">
+          <input id="assistantQuestion" maxlength="500" placeholder="Ví dụ: Làm sao để điểm danh thiếu nhi?" required>
+          <button type="submit">Gửi câu hỏi</button>
+        </form>
+        <div class="muted" style="margin-top:8px">Lưu ý: Trợ lý chỉ trả lời theo kho câu hỏi và câu trả lời được Admin duyệt; nếu chưa có thông tin phù hợp, trợ lý sẽ hướng dẫn liên hệ Admin.</div>
+      </section>
+      <section class="panel hidden" id="assistantAdminPanel">
+        <div class="panel-head"><div><h2>⚙️ Quản lý nội dung trợ lý (Admin)</h2><div class="muted">Thêm các câu hỏi thường gặp và câu trả lời chính thức để trợ lý sử dụng.</div></div></div>
+        <form id="assistantKnowledgeForm">
+          <input type="hidden" id="assistantEditId">
+          <div class="field"><label for="assistantQuestionTitle">Câu hỏi mẫu / chủ đề</label><input id="assistantQuestionTitle" maxlength="200" placeholder="Ví dụ: Cách điểm danh thiếu nhi" required></div>
+          <div class="field" style="margin-top:10px"><label for="assistantKeywords">Từ khóa (phân cách bằng dấu phẩy)</label><input id="assistantKeywords" maxlength="500" placeholder="điểm danh, quét mã, QR, chuyên cần"></div>
+          <div class="field" style="margin-top:10px"><label for="assistantAnswer">Câu trả lời</label><textarea id="assistantAnswer" rows="4" maxlength="5000" placeholder="Nhập câu trả lời được Admin duyệt..." required></textarea></div>
+          <div class="form-actions"><button type="submit" id="assistantSaveBtn">＋ Lưu nội dung</button><button type="button" class="secondary" id="assistantCancelEdit">Hủy chỉnh sửa</button></div>
+          <div class="error" id="assistantAdminMessage"></div>
+        </form>
+        <hr style="border:0;border-top:1px solid #e5eaf1;margin:20px 0">
+        <h3>Kho câu hỏi và câu trả lời</h3>
+        <div class="table-wrap"><table><thead><tr><th>Câu hỏi mẫu</th><th>Từ khóa</th><th>Câu trả lời</th><th>Thao tác</th></tr></thead><tbody id="assistantKnowledgeTable"></tbody></table></div>
+      </section>
+    </div>
+
     <div id="page-accounts" class="page hidden">
       <section class="panel"><div class="panel-head"><div><h2>Quản lý tài khoản đăng ký</h2><div class="muted">Chỉ Admin được xem, khóa/mở khóa, đặt lại mật khẩu và xóa tài khoản.</div></div><button class="secondary" id="refreshAccounts">Làm mới</button></div>
         <div class="notice">Mỗi tài khoản có dữ liệu riêng. Admin có thể chọn tài khoản để xem và nhập thông tin thay cho tài khoản đó. Người dùng khác chỉ xem được dữ liệu của chính mình.</div>
@@ -278,11 +315,79 @@ function persist(){ensureMemberCodes();localStorage.setItem(dataStorageKey(),JSO
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 let pageHistory=[];let currentPage='dashboard';
-function showPage(name,fromBack=false){if(name==='accounts'&&(!currentUser||currentUser.role!=='admin')){alert('Chỉ quản trị viên mới được truy cập mục này.');return}if(name!==currentPage){if(!fromBack)pageHistory.push(currentPage);currentPage=name;}document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+name).classList.remove('hidden');document.querySelectorAll('.nav-btn[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name));const titles={dashboard:'Tổng quan',members:'Quản lý thiếu nhi',attendance:'Điểm danh',violations:'Vi phạm / nề nếp',grades:'Nhập điểm đoàn sinh',leaders:'Quản lý huynh trưởng',profile:'Thông tin cá nhân',settings:'Thông tin xứ đoàn',parishes:'Danh mục giáo xứ',accounts:'Quản lý tài khoản',accountSettings:'Đổi tên đăng nhập / mật khẩu'};$('pageTitle').textContent=titles[name];if(name==='attendance')renderAttendance();if(name==='violations'){renderViolationMembers();renderViolations();if(currentUser&&!$('vEnteredBy').value)$('vEnteredBy').value=currentUser.name}if(name==='grades')renderGrades();if(name==='profile')fillProfile();if(name==='settings')fillSettings();if(name==='parishes')initParishDirectory();if(name==='accounts')renderAccounts();if(name==='accountSettings')fillAccountSettings()}
+function showPage(name,fromBack=false){if(name==='accounts'&&(!currentUser||currentUser.role!=='admin')){alert('Chỉ quản trị viên mới được truy cập mục này.');return}if(name!==currentPage){if(!fromBack)pageHistory.push(currentPage);currentPage=name;}document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));$('page-'+name).classList.remove('hidden');document.querySelectorAll('.nav-btn[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name));const titles={dashboard:'Tổng quan',members:'Quản lý thiếu nhi',attendance:'Điểm danh',violations:'Vi phạm / nề nếp',grades:'Nhập điểm đoàn sinh',leaders:'Quản lý huynh trưởng',profile:'Thông tin cá nhân',settings:'Thông tin xứ đoàn',parishes:'Danh mục giáo xứ',accounts:'Quản lý tài khoản',accountSettings:'Đổi tên đăng nhập / mật khẩu',assistant:'Trợ lý hỏi đáp'};$('pageTitle').textContent=titles[name];if(name==='attendance')renderAttendance();if(name==='violations'){renderViolationMembers();renderViolations();if(currentUser&&!$('vEnteredBy').value)$('vEnteredBy').value=currentUser.name}if(name==='grades')renderGrades();if(name==='profile')fillProfile();if(name==='settings')fillSettings();if(name==='parishes')initParishDirectory();if(name==='accounts')renderAccounts();if(name==='accountSettings')fillAccountSettings();if(name==='assistant')renderAssistantKnowledge()}
 document.querySelectorAll('.nav-btn[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $('backBtn').addEventListener('click',()=>{if(pageHistory.length){const previous=pageHistory.pop();showPage(previous,true)}else if(currentPage!=='dashboard'){showPage('dashboard',true)}else{alert('Bạn đang ở trang Tổng quan.')}});
 const ACCOUNT_STORE='tntt_accounts_v1';
+
 let currentUser=null;
+
+// Kho hỏi đáp do Admin quản lý. Nội dung lưu trên trình duyệt hiện tại.
+const ASSISTANT_STORE='eucharistia_assistant_knowledge_v1';
+function readAssistantKnowledge(){try{const x=JSON.parse(localStorage.getItem(ASSISTANT_STORE)||'[]');return Array.isArray(x)?x:[]}catch(e){return []}}
+function saveAssistantKnowledge(items){localStorage.setItem(ASSISTANT_STORE,JSON.stringify(items))}
+function normalizeAssistantText(value){
+ return String(value||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+function renderAssistantKnowledge(){
+ const admin=currentUser?.role==='admin';
+ $('assistantAdminPanel').classList.toggle('hidden',!admin);
+ if(!admin)return;
+ const items=readAssistantKnowledge();
+ $('assistantKnowledgeTable').innerHTML=items.length?items.map(item=>`<tr><td><b>${esc(item.title)}</b></td><td>${esc((item.keywords||[]).join(', '))}</td><td>${esc(item.answer)}</td><td><div class="account-actions"><button class="secondary" onclick="editAssistantKnowledge('${item.id}')">Sửa</button><button class="danger" onclick="deleteAssistantKnowledge('${item.id}')">Xóa</button></div></td></tr>`).join(''):'<tr><td colspan="4" class="empty">Chưa có nội dung. Admin hãy thêm câu hỏi và câu trả lời.</td></tr>';
+}
+function resetAssistantEditor(){
+ $('assistantEditId').value='';$('assistantQuestionTitle').value='';$('assistantKeywords').value='';$('assistantAnswer').value='';$('assistantSaveBtn').textContent='＋ Lưu nội dung';$('assistantAdminMessage').textContent='';
+}
+window.editAssistantKnowledge=function(id){
+ if(currentUser?.role!=='admin')return;
+ const item=readAssistantKnowledge().find(x=>x.id===id);if(!item)return;
+ $('assistantEditId').value=item.id;$('assistantQuestionTitle').value=item.title;$('assistantKeywords').value=(item.keywords||[]).join(', ');$('assistantAnswer').value=item.answer;$('assistantSaveBtn').textContent='Lưu thay đổi';$('assistantAdminMessage').textContent='Đang chỉnh sửa nội dung.';
+};
+window.deleteAssistantKnowledge=function(id){
+ if(currentUser?.role!=='admin'){alert('Chỉ Admin mới được xóa nội dung.');return}
+ if(!confirm('Bạn có chắc muốn xóa câu hỏi và câu trả lời này?'))return;
+ saveAssistantKnowledge(readAssistantKnowledge().filter(x=>x.id!==id));renderAssistantKnowledge();
+};
+$('assistantKnowledgeForm').addEventListener('submit',e=>{
+ e.preventDefault();if(currentUser?.role!=='admin'){alert('Chỉ Admin mới được quản lý kho hỏi đáp.');return}
+ const title=$('assistantQuestionTitle').value.trim(),keywords=$('assistantKeywords').value.split(',').map(x=>x.trim()).filter(Boolean),answer=$('assistantAnswer').value.trim(),id=$('assistantEditId').value;
+ if(!title||!answer){$('assistantAdminMessage').textContent='Vui lòng nhập câu hỏi mẫu và câu trả lời.';return}
+ const items=readAssistantKnowledge(),entry={id:id||crypto.randomUUID(),title,keywords,answer,updatedAt:new Date().toISOString()};
+ const index=items.findIndex(x=>x.id===entry.id);if(index>=0)items[index]=entry;else items.unshift(entry);
+ saveAssistantKnowledge(items);resetAssistantEditor();renderAssistantKnowledge();$('assistantAdminMessage').textContent='Đã lưu nội dung cho trợ lý Eucharistia.';
+});
+$('assistantCancelEdit').addEventListener('click',resetAssistantEditor);
+function addAssistantMessage(text,isUser=false){
+ const node=document.createElement('div');node.className='assistant-message '+(isUser?'user':'bot');
+ const label=document.createElement('b');label.textContent=isUser?'Bạn: ':'Eucharistia: ';
+ node.appendChild(label);node.appendChild(document.createTextNode(text));
+ $('assistantChat').appendChild(node);$('assistantChat').scrollTop=$('assistantChat').scrollHeight;
+}
+function answerAssistantQuestion(question){
+ const q=normalizeAssistantText(question),qWords=new Set(q.split(' ').filter(w=>w.length>1));
+ const items=readAssistantKnowledge();
+ let best=null,bestScore=0;
+ for(const item of items){
+  const phrases=[item.title,...(item.keywords||[])].map(normalizeAssistantText).filter(Boolean);
+  let score=0;
+  for(const phrase of phrases){
+   if(q.includes(phrase))score=Math.max(score,phrase.length+10);
+   const words=phrase.split(' ').filter(w=>w.length>1);
+   const overlap=words.filter(w=>qWords.has(w)).length;
+   if(words.length)score=Math.max(score,overlap/words.length*8);
+  }
+  if(score>bestScore){bestScore=score;best=item}
+ }
+ if(best&&bestScore>=2.5)return best.answer;
+ return 'Xin lỗi, hiện kho kiến thức chưa có câu trả lời phù hợp. Bạn vui lòng liên hệ Admin hoặc Huynh trưởng phụ trách để được hướng dẫn. Admin có thể bổ sung nội dung này trong mục Trợ lý hỏi đáp.';
+}
+$('assistantAskForm').addEventListener('submit',e=>{
+ e.preventDefault();const question=$('assistantQuestion').value.trim();if(!question)return;
+ addAssistantMessage(question,true);$('assistantQuestion').value='';
+ addAssistantMessage(answerAssistantQuestion(question));
+});
+
 function readAccounts(){try{return JSON.parse(localStorage.getItem(ACCOUNT_STORE)||'[]')}catch(e){return []}}
 function saveAccounts(a){localStorage.setItem(ACCOUNT_STORE,JSON.stringify(a))}
 function getAdminUsername(){return localStorage.getItem('tntt_admin_username')||'admin'}
